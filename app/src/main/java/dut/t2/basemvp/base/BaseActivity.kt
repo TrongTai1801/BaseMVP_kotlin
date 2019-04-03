@@ -4,19 +4,27 @@ import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.os.Build
 import android.os.Bundle
+import android.support.v7.app.ActionBar
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import android.view.Gravity
 import android.view.View
 import android.widget.Toast
 import dut.t2.basemvp.R
+import org.androidannotations.annotations.AfterViews
+import org.androidannotations.annotations.EActivity
 import java.lang.Exception
 
+@EActivity
 abstract class BaseActivity<V : BaseView, T : BasePresenter<V>> : AppCompatActivity(), BaseView {
 
     private val TAG = this.javaClass.simpleName
     protected abstract var mPresenter: T
+    protected var mActionBar: ActionBar? = null
 
     lateinit var mProgressDialog: ProgressDialog
+
+    protected abstract fun afterViews()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,6 +33,12 @@ abstract class BaseActivity<V : BaseView, T : BasePresenter<V>> : AppCompatActiv
 
         if (mPresenter != null) mPresenter.attachView(this as V)
         initProgressDialog()
+    }
+
+    @AfterViews
+    protected fun initViews() {
+        initActionBar()
+        this.afterViews()
     }
 
     override fun onDestroy() {
@@ -73,6 +87,24 @@ abstract class BaseActivity<V : BaseView, T : BasePresenter<V>> : AppCompatActiv
                 .show()
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    fun initActionBar() {
+        mActionBar = supportActionBar
+        if (mActionBar != null) {
+            val viewActionBar = layoutInflater.inflate(R.layout.actionbar, null)
+            val params = ActionBar.LayoutParams(
+                ActionBar.LayoutParams.WRAP_CONTENT,
+                ActionBar.LayoutParams.MATCH_PARENT,
+                Gravity.CENTER
+            )
+            mActionBar!!.setCustomView(viewActionBar, params)
+            mActionBar!!.setDisplayShowCustomEnabled(true)
+            mActionBar!!.setDisplayShowTitleEnabled(false)
+            mActionBar!!.setDisplayHomeAsUpEnabled(true)
+            mActionBar!!.setHomeButtonEnabled(true)
+            mActionBar!!.show()
         }
     }
 }
